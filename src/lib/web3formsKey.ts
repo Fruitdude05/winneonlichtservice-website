@@ -1,14 +1,17 @@
 let cachedKey: string | null | undefined;
 
-/** Build-Zeit (.env) oder Laufzeit (/api/public-config.php auf Hostinger). */
-export async function resolveWeb3FormsAccessKey(): Promise<string | undefined> {
+/** Öffentlicher Web3Forms-Key — darf im Frontend liegen (Domain-Schutz im Web3Forms-Dashboard). */
+const WEB3FORMS_ACCESS_KEY = "327fd384-ad28-4830-986a-cfb7d0e809e6";
+
+/** Build-Zeit (.env), Laufzeit-Config oder eingebauter Fallback. */
+export async function resolveWeb3FormsAccessKey(): Promise<string> {
   const envKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY as string | undefined;
   if (envKey) {
     return envKey;
   }
 
   if (cachedKey !== undefined) {
-    return cachedKey ?? undefined;
+    return cachedKey || WEB3FORMS_ACCESS_KEY;
   }
 
   try {
@@ -16,20 +19,23 @@ export async function resolveWeb3FormsAccessKey(): Promise<string | undefined> {
       headers: { Accept: "application/json" },
     });
 
-    if (response.ok) {
+    const contentType = response.headers.get("content-type") ?? "";
+    if (response.ok && contentType.includes("application/json")) {
       const data = (await response.json()) as { web3formsAccessKey?: string };
       const key = data.web3formsAccessKey?.trim();
-      cachedKey = key || null;
-      return cachedKey ?? undefined;
+      if (key) {
+        cachedKey = key;
+        return key;
+      }
     }
   } catch {
-    // Browser-Fallback nicht möglich
+    // Server-Config nicht erreichbar — Fallback nutzen
   }
 
-  cachedKey = null;
-  return undefined;
+  cachedKey = WEB3FORMS_ACCESS_KEY;
+  return WEB3FORMS_ACCESS_KEY;
 }
 
 export function hasWeb3FormsAccessKeyInBuild(): boolean {
-  return Boolean(import.meta.env.VITE_WEB3FORMS_ACCESS_KEY);
+  return Boolean(import.meta.env.VITE_WEB3FORMS_ACCESS_KEY) || import.meta.env.PROD;
 }

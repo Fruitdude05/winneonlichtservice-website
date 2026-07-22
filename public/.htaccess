@@ -4,6 +4,9 @@ DirectoryIndex index.html
   RewriteEngine On
   RewriteBase /
 
+  # PHP-API nie an die SPA weiterleiten
+  RewriteRule ^api/ - [L]
+
   # Statische Dateien und Ordner (z. B. /kontakt/index.html) unverändert ausliefern
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} -f [OR]
