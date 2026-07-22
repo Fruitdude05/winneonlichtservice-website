@@ -74,6 +74,49 @@ function buildNotificationBody(
   };
 }
 
+async function sendViaServerProxy(
+  event: ChatNotificationEvent,
+  options: {
+    pageUrl: string;
+    userMessage?: string;
+    transcript?: ChatTranscriptEntry[];
+    messageId?: string;
+  },
+): Promise<{ email: boolean; whatsapp: boolean } | null> {
+  try {
+    const response = await fetch("/api/notify.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        event,
+        pageUrl: options.pageUrl,
+        userMessage: options.userMessage ?? "",
+        transcript: options.transcript ?? [],
+        messageId: options.messageId ?? "",
+      }),
+    });
+
+    if (response.status === 503) {
+      return null;
+    }
+
+    if (!response.ok) {
+      return { email: false, whatsapp: false };
+    }
+
+    const result = (await response.json()) as { email?: boolean; whatsapp?: boolean };
+    return {
+      email: Boolean(result.email),
+      whatsapp: Boolean(result.whatsapp),
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function sendEmailNotification(subject: string, body: string): Promise<boolean> {
   const accessKey = getWeb3FormsKey();
   if (!accessKey) {
@@ -91,7 +134,7 @@ async function sendEmailNotification(subject: string, body: string): Promise<boo
         access_key: accessKey,
         subject: `[Website-Chat] ${subject}`,
         name: "Website-Besucher",
-        email: BUSINESS.email,
+        email: "chat@winneonlichtservice.de",
         message: body,
         from_name: "Win Neonlicht-Service Chat",
         botcheck: "",
@@ -126,6 +169,10 @@ async function sendWhatsAppNotification(text: string): Promise<boolean> {
   }
 }
 
+export function isChatNotificationConfigured(): boolean {
+  return Boolean(getWeb3FormsKey() || getCallMeBotKey());
+}
+
 export function isWhatsAppNotificationConfigured(): boolean {
   return Boolean(getCallMeBotKey());
 }
@@ -147,6 +194,14 @@ export async function sendChatNotification(
 
   if (notifiedSessions.has(dedupeKey)) {
     return { email: false, whatsapp: false };
+  }
+
+  const serverResult = await sendViaServerProxy(event, options);
+  if (serverResult !== null) {
+    if (serverResult.email || serverResult.whatsapp) {
+      notifiedSessions.add(dedupeKey);
+    }
+    return serverResult;
   }
 
   const { subject, body, whatsappText } = buildNotificationBody(event, options);

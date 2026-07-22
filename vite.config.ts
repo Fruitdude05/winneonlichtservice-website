@@ -9,6 +9,8 @@ import { openAiChatProxy } from "./vite-openai-proxy";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const openAiApiKey = env.OPENAI_API_KEY || env.VITE_OPENAI_API_KEY;
+  const web3FormsKey = env.WEB3FORMS_ACCESS_KEY || env.VITE_WEB3FORMS_ACCESS_KEY;
+  const callMeBotKey = env.CALLMEBOT_API_KEY || env.VITE_CALLMEBOT_API_KEY;
 
   return {
     server: {
@@ -17,7 +19,11 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
     },
     plugins: [
-      openAiChatProxy(openAiApiKey),
+      openAiChatProxy(openAiApiKey, {
+        web3FormsKey,
+        callMeBotKey,
+        whatsappNumber: "4915562052989",
+      }),
       react(),
       vitePrerenderPlugin({
         renderTarget: "#root",

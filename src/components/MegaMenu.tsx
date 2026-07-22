@@ -10,12 +10,18 @@ const PHONE_NUMBERS = [
   { label: "Handy", number: "+49 15562 052989", href: "tel:+4915562052989" },
 ];
 
-const PhoneDropdown = ({ iconClassName = "w-5 h-5" }: { iconClassName?: string }) => {
+const PhoneDropdown = ({
+  iconClassName = "w-5 h-5",
+  variant = "dropdown",
+}: {
+  iconClassName?: string;
+  variant?: "dropdown" | "compact";
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || variant === "compact") return;
 
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -25,7 +31,19 @@ const PhoneDropdown = ({ iconClassName = "w-5 h-5" }: { iconClassName?: string }
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, variant]);
+
+  if (variant === "compact") {
+    return (
+      <a
+        href={PHONE_NUMBERS[0].href}
+        className="shrink-0 min-h-11 min-w-11 flex items-center justify-center text-foreground hover:text-primary transition-colors"
+        aria-label={`Anrufen: ${PHONE_NUMBERS[0].number}`}
+      >
+        <Phone className={iconClassName} />
+      </a>
+    );
+  }
 
   return (
     <div ref={containerRef} className="ml-auto flex items-center">
@@ -122,17 +140,17 @@ const MegaMenu = () => {
   const isHome = pathname === "/";
   const [isOpen, setIsOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
   const headerRef = useRef<HTMLElement>(null);
-  const scrollYAtOpen = useRef(0);
   const menuOpenedAt = useRef(0);
 
   const closeServices = () => setIsServicesOpen(false);
   const closeMobile = () => setIsOpen(false);
 
   const openMobileMenu = () => {
-    scrollYAtOpen.current = window.scrollY;
     menuOpenedAt.current = Date.now();
     setIsOpen(true);
+    setIsServicesOpen(false);
   };
 
   const toggleMobileMenu = () => {
@@ -146,12 +164,53 @@ const MegaMenu = () => {
   const toggleServicesMenu = () => {
     setIsServicesOpen((open) => {
       if (!open) {
-        scrollYAtOpen.current = window.scrollY;
         menuOpenedAt.current = Date.now();
       }
       return !open;
     });
   };
+
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+
+    updateHeaderHeight();
+    window.addEventListener("resize", updateHeaderHeight);
+
+    return () => window.removeEventListener("resize", updateHeaderHeight);
+  }, [isOpen, isServicesOpen]);
+
+  useEffect(() => {
+    closeMobile();
+    closeServices();
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMobile();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isServicesOpen) return;
@@ -167,22 +226,16 @@ const MegaMenu = () => {
   }, [isServicesOpen]);
 
   useEffect(() => {
-    if (!isOpen && !isServicesOpen) return;
+    if (!isServicesOpen) return;
 
     const handleScroll = () => {
-      // Kurz nach dem Öffnen ignorieren (Layout-Animation)
       if (Date.now() - menuOpenedAt.current < 450) return;
-
-      // Nur bei echtem Scroll schließen, nicht bei minimalem Springen
-      if (Math.abs(window.scrollY - scrollYAtOpen.current) < 20) return;
-
-      setIsOpen(false);
       setIsServicesOpen(false);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true, capture: true });
     return () => window.removeEventListener("scroll", handleScroll, { capture: true });
-  }, [isOpen, isServicesOpen]);
+  }, [isServicesOpen]);
 
   return (
     <header ref={headerRef} className="sticky top-0 z-50 bg-background border-b border-border/60 shadow-sm">
@@ -276,27 +329,40 @@ const MegaMenu = () => {
           </div>
 
           <div className="flex md:hidden items-center gap-1 shrink-0">
-            <PhoneDropdown iconClassName="w-5 h-5" />
+            <PhoneDropdown iconClassName="w-5 h-5" variant="compact" />
             <button
+              type="button"
               className="min-h-11 min-w-11 flex items-center justify-center text-foreground"
               onClick={toggleMobileMenu}
               aria-label={isOpen ? "Menü schließen" : "Menü öffnen"}
               aria-expanded={isOpen}
+              aria-controls="mobile-menu-panel"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </nav>
+      </div>
 
-        {/* Mobile menu – schiebt Inhalt nach unten */}
-        <div
-          className={cn(
-            "md:hidden grid transition-[grid-template-rows] duration-300 ease-in-out",
-            isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-          )}
-        >
-          <div className="overflow-hidden">
-            <div className="pb-4 border-t border-border">
+      {isOpen && (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[55] bg-black/40 md:hidden"
+            aria-label="Menü schließen"
+            onClick={closeMobile}
+          />
+
+          <div
+            id="mobile-menu-panel"
+            className="fixed inset-x-0 z-[60] md:hidden overflow-y-auto overscroll-contain bg-background border-t border-border shadow-lg"
+            style={{
+              top: headerHeight,
+              maxHeight: `calc(100dvh - ${headerHeight}px)`,
+              paddingBottom: "calc(5.5rem + env(safe-area-inset-bottom))",
+            }}
+          >
+            <div className="container mx-auto px-4 pb-4">
               <div className="flex flex-col gap-2 pt-3">
                 <Link
                   to="/"
@@ -315,7 +381,7 @@ const MegaMenu = () => {
 
                 <div className="py-2 border-y border-border">
                   <span className="text-foreground font-semibold text-base">Dienstleistungen</span>
-                  <div className="mt-2 grid grid-cols-1 gap-1">
+                  <div className="mt-2 grid grid-cols-1 gap-3">
                     {serviceCategories.map((category, categoryIndex) => (
                       <div key={categoryIndex} className="space-y-1">
                         <span className="text-xs font-bold text-primary uppercase tracking-wide">
@@ -351,21 +417,35 @@ const MegaMenu = () => {
                   Kontakt
                 </Link>
 
-                <div className="flex items-center gap-3 pt-2 border-t border-border">
-                  <PhoneDropdown iconClassName="w-4 h-4" />
+                <div className="flex flex-col gap-2 pt-2 border-t border-border">
+                  {PHONE_NUMBERS.map((phone) => (
+                    <a
+                      key={phone.label}
+                      href={phone.href}
+                      className="flex items-center gap-3 rounded-lg px-1 py-2 text-foreground hover:text-primary transition-colors min-h-11"
+                      onClick={closeMobile}
+                    >
+                      <Phone className="w-4 h-4 shrink-0" />
+                      <span>
+                        <span className="block text-xs text-muted-foreground">{phone.label}</span>
+                        <span className="block text-sm font-medium">{phone.number}</span>
+                      </span>
+                    </a>
+                  ))}
                   <a
                     href="mailto:info@winneonlichtservice.de"
-                    className="flex items-center gap-1 text-foreground hover:text-primary transition-colors text-sm min-h-11"
+                    className="flex items-center gap-3 rounded-lg px-1 py-2 text-foreground hover:text-primary transition-colors min-h-11"
+                    onClick={closeMobile}
                   >
-                    <Mail className="w-4 h-4" />
-                    <span>E-Mail</span>
+                    <Mail className="w-4 h-4 shrink-0" />
+                    <span className="text-sm font-medium">info@winneonlichtservice.de</span>
                   </a>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
       {/* Desktop Dienstleistungen – schiebt Seite nach unten, kein Overlay */}
       <div

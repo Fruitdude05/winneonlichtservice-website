@@ -76,6 +76,8 @@ const Home = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const heroRef = useRef<HTMLElement>(null);
   const dragStartX = useRef<number | null>(null);
+  const dragStartY = useRef<number | null>(null);
+  const isHorizontalSwipe = useRef<boolean | null>(null);
   const didSwipe = useRef(false);
   const autoSlideTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -112,37 +114,65 @@ const Home = () => {
     if (!hero) return;
 
     const minSwipeDistance = 50;
+    const directionThreshold = 12;
+
+    const resetDragState = (event: PointerEvent) => {
+      dragStartX.current = null;
+      dragStartY.current = null;
+      isHorizontalSwipe.current = null;
+      if (hero.hasPointerCapture(event.pointerId)) {
+        hero.releasePointerCapture(event.pointerId);
+      }
+    };
 
     const handlePointerDown = (event: PointerEvent) => {
       if (event.pointerType === "mouse" && event.button !== 0) return;
-      event.preventDefault();
       dragStartX.current = event.clientX;
+      dragStartY.current = event.clientY;
+      isHorizontalSwipe.current = null;
       didSwipe.current = false;
-      hero.setPointerCapture(event.pointerId);
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (dragStartX.current === null || dragStartY.current === null) return;
+
+      const diffX = Math.abs(event.clientX - dragStartX.current);
+      const diffY = Math.abs(event.clientY - dragStartY.current);
+
+      if (diffX < directionThreshold && diffY < directionThreshold) return;
+
+      if (isHorizontalSwipe.current === null) {
+        isHorizontalSwipe.current = diffX > diffY;
+        if (isHorizontalSwipe.current) {
+          hero.setPointerCapture(event.pointerId);
+        }
+      }
+
+      if (isHorizontalSwipe.current) {
+        event.preventDefault();
+      }
     };
 
     const handlePointerUp = (event: PointerEvent) => {
-      if (dragStartX.current === null) return;
-
-      const diff = dragStartX.current - event.clientX;
-
-      if (Math.abs(diff) > minSwipeDistance) {
-        didSwipe.current = true;
-        goToSlide(diff > 0 ? 1 : -1);
+      if (dragStartX.current === null || dragStartY.current === null) {
+        resetDragState(event);
+        return;
       }
 
-      dragStartX.current = null;
+      if (isHorizontalSwipe.current) {
+        const diff = dragStartX.current - event.clientX;
 
-      if (hero.hasPointerCapture(event.pointerId)) {
-        hero.releasePointerCapture(event.pointerId);
+        if (Math.abs(diff) > minSwipeDistance) {
+          didSwipe.current = true;
+          goToSlide(diff > 0 ? 1 : -1);
+        }
       }
+
+      resetDragState(event);
     };
 
     const handlePointerCancel = (event: PointerEvent) => {
-      dragStartX.current = null;
-      if (hero.hasPointerCapture(event.pointerId)) {
-        hero.releasePointerCapture(event.pointerId);
-      }
+      resetDragState(event);
     };
 
     const handleClickCapture = (event: MouseEvent) => {
@@ -153,12 +183,14 @@ const Home = () => {
     };
 
     hero.addEventListener("pointerdown", handlePointerDown);
+    hero.addEventListener("pointermove", handlePointerMove);
     hero.addEventListener("pointerup", handlePointerUp);
     hero.addEventListener("pointercancel", handlePointerCancel);
     hero.addEventListener("click", handleClickCapture, true);
 
     return () => {
       hero.removeEventListener("pointerdown", handlePointerDown);
+      hero.removeEventListener("pointermove", handlePointerMove);
       hero.removeEventListener("pointerup", handlePointerUp);
       hero.removeEventListener("pointercancel", handlePointerCancel);
       hero.removeEventListener("click", handleClickCapture, true);
@@ -171,7 +203,7 @@ const Home = () => {
       {/* Hero Section with Fullscreen Slideshow */}
       <section
         ref={heroRef}
-        className="relative min-h-[420px] h-[52vh] sm:h-[560px] md:h-[700px] lg:h-[800px] max-h-[860px] overflow-hidden touch-none select-none cursor-grab active:cursor-grabbing"
+        className="relative min-h-[420px] h-[52vh] sm:h-[560px] md:h-[700px] lg:h-[800px] max-h-[860px] overflow-hidden touch-pan-y select-none md:cursor-grab md:active:cursor-grabbing"
       >
         {/* Slides: image + text together */}
         {heroSlides.map((slide, index) => {
@@ -237,22 +269,24 @@ const Home = () => {
         })}
 
         {/* Slide Indicators */}
-        <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2 md:gap-3">
+        <div className="absolute bottom-3 md:bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 md:gap-2">
           {heroSlides.map((_, index) => (
             <button
               key={index}
+              type="button"
               onClick={() => {
                 setCurrentSlide(index);
                 resetAutoSlideTimer();
               }}
-              className="min-h-11 min-w-11 flex items-center justify-center"
+              className="flex h-8 w-8 items-center justify-center md:h-10 md:w-10"
               aria-label={`Slide ${index + 1}`}
+              aria-current={index === currentSlide ? "true" : undefined}
             >
               <span
-                className={`block rounded-full transition-all ${
+                className={`block rounded-full transition-all duration-300 ${
                   index === currentSlide
-                    ? "bg-primary h-3 w-8"
-                    : "bg-white/50 hover:bg-white/80 h-3 w-3"
+                    ? "h-2 w-5 bg-primary md:h-2.5 md:w-7"
+                    : "h-2 w-2 bg-white/50 hover:bg-white/80 md:h-2.5 md:w-2.5"
                 }`}
               />
             </button>
