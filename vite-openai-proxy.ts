@@ -46,7 +46,12 @@ export function openAiChatProxy(apiKey: string | undefined, notifyConfig?: {
             transcript?: Array<{ role?: string; content?: string }>;
           };
 
-          const allowedEvents = new Set(["chat_opened", "user_message", "whatsapp_handoff"]);
+          const allowedEvents = new Set([
+            "chat_opened",
+            "user_message",
+            "assistant_reply",
+            "whatsapp_handoff",
+          ]);
           if (!input.event || !allowedEvents.has(input.event)) {
             res.statusCode = 400;
             res.setHeader("Content-Type", "application/json");
@@ -57,12 +62,14 @@ export function openAiChatProxy(apiKey: string | undefined, notifyConfig?: {
           const subjects: Record<string, string> = {
             chat_opened: "Neuer Website-Chat gestartet",
             user_message: "Neue Chat-Nachricht auf der Website",
+            assistant_reply: "Dave-Antwort im Website-Chat",
             whatsapp_handoff: "Chat-Besucher möchte per WhatsApp sprechen",
           };
 
           const intros: Record<string, string> = {
             chat_opened: "Ein Besucher hat den KI-Chat auf Ihrer Website geöffnet.",
             user_message: "Neue Nachricht im Website-Chat:",
+            assistant_reply: "Dave hat geantwortet. Vollständiger Chat-Verlauf:",
             whatsapp_handoff: "Ein Besucher möchte nach dem KI-Chat direkt per WhatsApp mit Ihnen sprechen.",
           };
 

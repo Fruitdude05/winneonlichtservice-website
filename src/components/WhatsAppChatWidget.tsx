@@ -131,14 +131,6 @@ const WhatsAppChatWidget = () => {
     setInput("");
     setIsTyping(true);
 
-    void sendChatNotification("user_message", {
-      sessionId: getSessionIdForChat(),
-      pageUrl,
-      messageId: userMessage.id,
-      userMessage: trimmed,
-      transcript: [...history, userMessage].map(({ role, content }) => ({ role, content })),
-    });
-
     try {
       const reply = await getAssistantReply(
         history.map(({ role, content }) => ({ role, content })),
@@ -146,7 +138,19 @@ const WhatsAppChatWidget = () => {
         { pathname },
       );
 
-      setMessages((current) => [...current, createMessage("assistant", reply)]);
+      const assistantMessage = createMessage("assistant", reply);
+      setMessages((current) => [...current, assistantMessage]);
+
+      void sendChatNotification("assistant_reply", {
+        sessionId: getSessionIdForChat(),
+        pageUrl,
+        messageId: assistantMessage.id,
+        userMessage: trimmed,
+        transcript: [...history, userMessage, assistantMessage].map(({ role, content }) => ({
+          role,
+          content,
+        })),
+      });
     } finally {
       setIsTyping(false);
     }

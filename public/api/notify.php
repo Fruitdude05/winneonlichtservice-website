@@ -30,7 +30,7 @@ if (!is_array($input) || !isset($input['event']) || !is_string($input['event']))
     exit;
 }
 
-$allowedEvents = ['chat_opened', 'user_message', 'whatsapp_handoff'];
+$allowedEvents = ['chat_opened', 'user_message', 'assistant_reply', 'whatsapp_handoff'];
 $event = $input['event'];
 
 if (!in_array($event, $allowedEvents, true)) {
@@ -46,12 +46,14 @@ $transcript = is_array($input['transcript'] ?? null) ? $input['transcript'] : []
 $subjects = [
     'chat_opened' => 'Neuer Website-Chat gestartet',
     'user_message' => 'Neue Chat-Nachricht auf der Website',
+    'assistant_reply' => 'Dave-Antwort im Website-Chat',
     'whatsapp_handoff' => 'Chat-Besucher möchte per WhatsApp sprechen',
 ];
 
 $intros = [
     'chat_opened' => 'Ein Besucher hat den KI-Chat auf Ihrer Website geöffnet.',
     'user_message' => 'Neue Nachricht im Website-Chat:',
+    'assistant_reply' => 'Dave hat geantwortet. Vollständiger Chat-Verlauf:',
     'whatsapp_handoff' => 'Ein Besucher möchte nach dem KI-Chat direkt per WhatsApp mit Ihnen sprechen.',
 ];
 

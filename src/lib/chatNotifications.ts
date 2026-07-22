@@ -3,6 +3,7 @@ import { BUSINESS } from "@/lib/seo";
 export type ChatNotificationEvent =
   | "chat_opened"
   | "user_message"
+  | "assistant_reply"
   | "whatsapp_handoff";
 
 type ChatTranscriptEntry = {
@@ -37,12 +38,14 @@ function buildNotificationBody(
   const subjects: Record<ChatNotificationEvent, string> = {
     chat_opened: "Neuer Website-Chat gestartet",
     user_message: "Neue Chat-Nachricht auf der Website",
+    assistant_reply: "Dave-Antwort im Website-Chat",
     whatsapp_handoff: "Chat-Besucher möchte per WhatsApp sprechen",
   };
 
   const intro: Record<ChatNotificationEvent, string> = {
     chat_opened: "Ein Besucher hat den KI-Chat auf Ihrer Website geöffnet.",
     user_message: "Neue Nachricht im Website-Chat:",
+    assistant_reply: "Dave hat geantwortet. Vollständiger Chat-Verlauf:",
     whatsapp_handoff: "Ein Besucher möchte nach dem KI-Chat direkt per WhatsApp mit Ihnen sprechen.",
   };
 
@@ -188,7 +191,7 @@ export async function sendChatNotification(
   },
 ): Promise<{ email: boolean; whatsapp: boolean }> {
   const dedupeKey =
-    event === "user_message" && options.messageId
+    (event === "user_message" || event === "assistant_reply") && options.messageId
       ? `${options.sessionId}:${event}:${options.messageId}`
       : `${options.sessionId}:${event}`;
 
