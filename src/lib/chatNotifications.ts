@@ -1,4 +1,5 @@
 import { BUSINESS } from "@/lib/seo";
+import { resolveWeb3FormsAccessKey } from "./web3formsKey";
 
 export type ChatNotificationEvent =
   | "chat_opened"
@@ -12,10 +13,6 @@ type ChatTranscriptEntry = {
 };
 
 const notifiedSessions = new Set<string>();
-
-function getWeb3FormsKey(): string | undefined {
-  return import.meta.env.VITE_WEB3FORMS_ACCESS_KEY as string | undefined;
-}
 
 function getCallMeBotKey(): string | undefined {
   return import.meta.env.VITE_CALLMEBOT_API_KEY as string | undefined;
@@ -121,7 +118,7 @@ async function sendViaServerProxy(
 }
 
 async function sendEmailNotification(subject: string, body: string): Promise<boolean> {
-  const accessKey = getWeb3FormsKey();
+  const accessKey = await resolveWeb3FormsAccessKey();
   if (!accessKey) {
     return false;
   }
@@ -173,7 +170,7 @@ async function sendWhatsAppNotification(text: string): Promise<boolean> {
 }
 
 export function isChatNotificationConfigured(): boolean {
-  return Boolean(getWeb3FormsKey() || getCallMeBotKey());
+  return Boolean(import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || getCallMeBotKey() || import.meta.env.PROD);
 }
 
 export function isWhatsAppNotificationConfigured(): boolean {

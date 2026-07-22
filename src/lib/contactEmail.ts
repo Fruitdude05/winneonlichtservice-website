@@ -1,3 +1,5 @@
+import { hasWeb3FormsAccessKeyInBuild, resolveWeb3FormsAccessKey } from "./web3formsKey";
+
 export type ContactMessagePayload = {
   name: string;
   email: string;
@@ -9,11 +11,11 @@ export type ContactMessagePayload = {
 type SendResult = { ok: true; method: "web3forms" } | { ok: false; error: string };
 
 export function isEmailServiceConfigured(): boolean {
-  return Boolean(import.meta.env.VITE_WEB3FORMS_ACCESS_KEY);
+  return hasWeb3FormsAccessKeyInBuild() || import.meta.env.PROD;
 }
 
 export async function sendContactMessage(payload: ContactMessagePayload): Promise<SendResult> {
-  const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY as string | undefined;
+  const accessKey = await resolveWeb3FormsAccessKey();
 
   if (!accessKey) {
     return {
