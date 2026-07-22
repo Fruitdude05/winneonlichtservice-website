@@ -67,14 +67,18 @@ async function sendViaBrowser(payload: ContactMessagePayload, accessKey: string)
       return { ok: true, method: "web3forms" };
     }
 
+    const apiMessage = result.message?.trim();
     return {
       ok: false,
-      error: result.message ?? "E-Mail konnte nicht gesendet werden.",
+      error:
+        apiMessage && apiMessage.length > 0
+          ? apiMessage
+          : "E-Mail konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder rufen Sie uns an.",
     };
   } catch {
     return {
       ok: false,
-      error: "Netzwerkfehler. Bitte versuchen Sie es erneut oder rufen Sie uns an.",
+      error: "Netzwerkfehler. Bitte prüfen Sie Ihre Internetverbindung oder rufen Sie uns an.",
     };
   }
 }
