@@ -26,6 +26,17 @@ import MontageAnfertigung from "@/pages/MontageAnfertigung";
 
 const queryClient = new QueryClient();
 
+function pageRoute(path: string, element: JSX.Element) {
+  if (path === "/") {
+    return <Route key={path} path={path} element={element} />;
+  }
+
+  return [
+    <Route key={path} path={path} element={element} />,
+    <Route key={`${path}/`} path={`${path}/`} element={element} />,
+  ];
+}
+
 type AppProvidersProps = {
   children: React.ReactNode;
 };
@@ -46,20 +57,20 @@ export const AppRoutes = () => (
     <Seo />
     <div className="pb-24 md:pb-0">
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/ueber-uns" element={<About />} />
-        <Route path="/kontakt" element={<Contact />} />
-        <Route path="/impressum" element={<Impressum />} />
-        <Route path="/datenschutz" element={<Datenschutz />} />
-        <Route path="/apothekenreinigung" element={<Apothekenreinigung />} />
-        <Route path="/bueroreinigung" element={<Bueroreinigung />} />
-        <Route path="/fassadenreinigung" element={<Fassadenreinigung />} />
-        <Route path="/fensterreinigung" element={<Fensterreinigung />} />
-        <Route path="/leuchtreklamenreinigung" element={<Leuchtreklamenreinigung />} />
-        <Route path="/unterhaltsreinigung" element={<Unterhaltsreinigung />} />
-        <Route path="/folientechnik" element={<Folientechnik />} />
-        <Route path="/led-umruestung" element={<LEDUmruestung />} />
-        <Route path="/montage-anfertigung" element={<MontageAnfertigung />} />
+        {pageRoute("/", <Home />)}
+        {pageRoute("/ueber-uns", <About />)}
+        {pageRoute("/kontakt", <Contact />)}
+        {pageRoute("/impressum", <Impressum />)}
+        {pageRoute("/datenschutz", <Datenschutz />)}
+        {pageRoute("/apothekenreinigung", <Apothekenreinigung />)}
+        {pageRoute("/bueroreinigung", <Bueroreinigung />)}
+        {pageRoute("/fassadenreinigung", <Fassadenreinigung />)}
+        {pageRoute("/fensterreinigung", <Fensterreinigung />)}
+        {pageRoute("/leuchtreklamenreinigung", <Leuchtreklamenreinigung />)}
+        {pageRoute("/unterhaltsreinigung", <Unterhaltsreinigung />)}
+        {pageRoute("/folientechnik", <Folientechnik />)}
+        {pageRoute("/led-umruestung", <LEDUmruestung />)}
+        {pageRoute("/montage-anfertigung", <MontageAnfertigung />)}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

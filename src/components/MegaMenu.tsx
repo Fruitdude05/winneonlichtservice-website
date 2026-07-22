@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Mail, Phone, MapPin, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isHomePath, normalizePathname } from "@/lib/paths";
 import { useHomeLinkClick } from "@/hooks/useHomeLinkClick";
 import logo from "@/assets/logo.png";
 
@@ -137,7 +138,13 @@ const ServicesPanel = ({ onNavigate }: { onNavigate?: () => void }) => (
 const MegaMenu = () => {
   const { pathname } = useLocation();
   const handleHomeLinkClick = useHomeLinkClick();
-  const isHome = pathname === "/";
+  const isHome = isHomePath(pathname);
+
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      "transition-colors font-medium text-sm min-h-11 inline-flex items-center",
+      isActive ? "text-primary" : "text-foreground hover:text-primary",
+    );
   const [isOpen, setIsOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -300,13 +307,17 @@ const MegaMenu = () => {
               </button>
               <Link
                 to="/ueber-uns"
-                className="text-foreground hover:text-primary transition-colors font-medium text-sm"
+                className={navLinkClass({
+                  isActive: normalizePathname(pathname) === "/ueber-uns",
+                })}
               >
                 Über uns
               </Link>
               <Link
                 to="/kontakt"
-                className="text-foreground hover:text-primary transition-colors font-medium text-sm"
+                className={navLinkClass({
+                  isActive: normalizePathname(pathname) === "/kontakt",
+                })}
               >
                 Kontakt
               </Link>

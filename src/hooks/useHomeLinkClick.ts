@@ -1,12 +1,14 @@
 import { useCallback, type MouseEvent } from "react";
 import { useLocation } from "react-router-dom";
 
+import { isHomePath } from "@/lib/paths";
+
 export function useHomeLinkClick() {
   const { pathname } = useLocation();
 
   return useCallback(
     (event: MouseEvent<HTMLAnchorElement>) => {
-      if (pathname !== "/") {
+      if (!isHomePath(pathname)) {
         return;
       }
 

@@ -1,14 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import {
-  getCanonicalUrl,
-  getJsonLdId,
-  getSeoForPath,
-  getStructuredDataForPath,
-  JSON_LD_IDS,
-  SITE_NAME,
-  SITE_URL,
-} from "@/lib/seo";
+import { getCanonicalUrl, getJsonLdId, getSeoForPath, getStructuredDataForPath, JSON_LD_IDS, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { normalizePathname } from "@/lib/paths";
 
 const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
@@ -60,7 +53,7 @@ function removeJsonLd(id: string) {
 function syncStructuredData(pathname: string) {
   JSON_LD_IDS.forEach(removeJsonLd);
 
-  const schemas = getStructuredDataForPath(pathname);
+  const schemas = getStructuredDataForPath(normalizePathname(pathname));
   schemas.forEach((schema, index) => {
     upsertJsonLd(getJsonLdId(schema, index), schema);
   });
@@ -68,8 +61,9 @@ function syncStructuredData(pathname: string) {
 
 const Seo = () => {
   const { pathname } = useLocation();
-  const seo = getSeoForPath(pathname);
-  const canonicalUrl = getCanonicalUrl(seo.path.startsWith("/") ? seo.path : pathname);
+  const normalizedPath = normalizePathname(pathname);
+  const seo = getSeoForPath(normalizedPath);
+  const canonicalUrl = getCanonicalUrl(seo.path.startsWith("/") ? seo.path : normalizedPath);
 
   useEffect(() => {
     document.documentElement.lang = "de";
@@ -96,11 +90,11 @@ const Seo = () => {
     upsertMeta("twitter:image", OG_IMAGE);
 
     if (!seo.noindex) {
-      syncStructuredData(pathname);
+      syncStructuredData(normalizedPath);
     } else {
       JSON_LD_IDS.forEach(removeJsonLd);
     }
-  }, [seo, canonicalUrl, pathname]);
+  }, [seo, canonicalUrl, normalizedPath]);
 
   return null;
 };

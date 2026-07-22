@@ -1,3 +1,5 @@
+import { normalizePathname } from "./paths";
+
 export const SITE_URL = "https://winneonlichtservice.de";
 export const SITE_NAME = "Win Neonlicht-Service";
 export const SITE_DOMAIN = "winneonlichtservice.de";
@@ -210,14 +212,16 @@ export const SITEMAP_PATHS = Object.entries(SEO_PAGES)
   .map(([, config]) => config.path);
 
 export function getSeoForPath(pathname: string): SeoConfig {
-  if (SEO_PAGES[pathname]) {
-    return SEO_PAGES[pathname];
+  const path = normalizePathname(pathname);
+
+  if (SEO_PAGES[path]) {
+    return SEO_PAGES[path];
   }
 
   return {
     title: `Seite nicht gefunden | ${SITE_NAME}`,
     description: defaultDescription,
-    path: pathname,
+    path,
     noindex: true,
   };
 }
@@ -301,19 +305,20 @@ export function getServiceSchema(path: ServicePath) {
 }
 
 export function getStructuredDataForPath(pathname: string) {
-  const seo = getSeoForPath(pathname);
+  const path = normalizePathname(pathname);
+  const seo = getSeoForPath(path);
   if (seo.noindex) {
     return [];
   }
 
   const schemas: object[] = [getLocalBusinessSchema()];
 
-  if (pathname === "/") {
+  if (path === "/") {
     schemas.push(getWebSiteSchema());
   }
 
-  if (isServicePath(pathname)) {
-    schemas.push(getServiceSchema(pathname));
+  if (isServicePath(path)) {
+    schemas.push(getServiceSchema(path));
   }
 
   return schemas;

@@ -14,6 +14,7 @@ import {
   WELCOME_MESSAGE,
 } from "@/lib/companyKnowledge";
 import { getWhatsAppUrl } from "@/lib/seo";
+import { normalizePathname } from "@/lib/paths";
 
 type ChatMessage = ChatTurn & {
   id: string;
@@ -64,6 +65,7 @@ function getSessionId(): string {
 
 const WhatsAppChatWidget = () => {
   const { pathname } = useLocation();
+  const normalizedPath = normalizePathname(pathname);
   const panelId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -135,7 +137,7 @@ const WhatsAppChatWidget = () => {
       const reply = await getAssistantReply(
         history.map(({ role, content }) => ({ role, content })),
         trimmed,
-        { pathname },
+        { pathname: normalizedPath },
       );
 
       const assistantMessage = createMessage("assistant", reply);
