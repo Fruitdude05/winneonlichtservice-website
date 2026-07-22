@@ -170,9 +170,14 @@ function sendWhatsAppNotification(string $apiKey, string $phone, string $text): 
 $emailSent = $web3FormsKey !== '' && sendEmailNotification($web3FormsKey, $subject, $body);
 $whatsappSent = $callMeBotKey !== '' && sendWhatsAppNotification($callMeBotKey, $whatsappNumber, $whatsappText);
 
-if (!$emailSent && !$whatsappSent && ($web3FormsKey === '' && $callMeBotKey === '')) {
+if (!$emailSent && !$whatsappSent) {
+    // 503 → Frontend nutzt Web3Forms direkt im Browser (Free-Plan auf Hostinger-IP blockiert).
     http_response_code(503);
-    echo json_encode(['error' => ['message' => 'not_configured'], 'email' => false, 'whatsapp' => false]);
+    echo json_encode([
+        'error' => ['message' => $web3FormsKey === '' && $callMeBotKey === '' ? 'not_configured' : 'delivery_failed'],
+        'email' => false,
+        'whatsapp' => false,
+    ]);
     exit;
 }
 

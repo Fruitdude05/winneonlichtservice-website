@@ -3,7 +3,7 @@ return [
     // Kopie als openai-config.php anlegen und echte Keys eintragen (nicht committen).
     'OPENAI_API_KEY' => 'sk-proj-...',
 
-    // Web3Forms — E-Mail-Benachrichtigungen bei Dave-Chat & Kontaktformular
+    // Optional: Web3Forms serverseitig (Hostinger Free-Plan oft blockiert — Browser-Fallback nutzt VITE_ Key im Build).
     // https://web3forms.com
     'WEB3FORMS_ACCESS_KEY' => '',
 

@@ -200,13 +200,12 @@ export async function sendChatNotification(
   }
 
   const serverResult = await sendViaServerProxy(event, options);
-  if (serverResult !== null) {
-    if (serverResult.email || serverResult.whatsapp) {
-      notifiedSessions.add(dedupeKey);
-    }
+  if (serverResult?.email || serverResult?.whatsapp) {
+    notifiedSessions.add(dedupeKey);
     return serverResult;
   }
 
+  // Web3Forms free plan erlaubt nur Browser-Aufrufe — Hostinger notify.php schlägt oft fehl.
   const { subject, body, whatsappText } = buildNotificationBody(event, options);
 
   const [email, whatsapp] = await Promise.all([
