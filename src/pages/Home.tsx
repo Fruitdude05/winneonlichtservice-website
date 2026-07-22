@@ -268,8 +268,8 @@ const Home = () => {
           );
         })}
 
-        {/* Slide Indicators */}
-        <div className="absolute bottom-3 md:bottom-8 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 md:gap-2">
+        {/* Slide Indicators – nur Desktop */}
+        <div className="absolute bottom-3 md:bottom-8 left-1/2 z-20 hidden md:flex -translate-x-1/2 items-center gap-1.5 md:gap-2">
           {heroSlides.map((_, index) => (
             <button
               key={index}

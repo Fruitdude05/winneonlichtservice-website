@@ -140,7 +140,6 @@ const MegaMenu = () => {
   const isHome = pathname === "/";
   const [isOpen, setIsOpen] = useState(false);
   const [isServicesOpen, setIsServicesOpen] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(0);
   const headerRef = useRef<HTMLElement>(null);
   const menuOpenedAt = useRef(0);
 
@@ -169,19 +168,6 @@ const MegaMenu = () => {
       return !open;
     });
   };
-
-  useEffect(() => {
-    const updateHeaderHeight = () => {
-      if (headerRef.current) {
-        setHeaderHeight(headerRef.current.offsetHeight);
-      }
-    };
-
-    updateHeaderHeight();
-    window.addEventListener("resize", updateHeaderHeight);
-
-    return () => window.removeEventListener("resize", updateHeaderHeight);
-  }, [isOpen, isServicesOpen]);
 
   useEffect(() => {
     closeMobile();
@@ -238,7 +224,10 @@ const MegaMenu = () => {
   }, [isServicesOpen]);
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-50 bg-background border-b border-border/60 shadow-sm">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-50 bg-background border-b border-border/60 shadow-sm pt-[env(safe-area-inset-top)]"
+    >
       {/* Top Bar */}
       <div className="bg-primary text-primary-foreground py-1">
         <div className="container mx-auto px-4 flex items-center justify-between text-xs">
@@ -345,22 +334,26 @@ const MegaMenu = () => {
       </div>
 
       {isOpen && (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-[55] bg-black/40 md:hidden"
-            aria-label="Menü schließen"
-            onClick={closeMobile}
-          />
+        <div
+          id="mobile-menu-panel"
+          className="fixed inset-0 z-[60] md:hidden flex flex-col bg-background"
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
+            <span className="text-base font-semibold text-foreground">Menü</span>
+            <button
+              type="button"
+              className="flex h-11 w-11 items-center justify-center text-foreground"
+              onClick={closeMobile}
+              aria-label="Menü schließen"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
 
           <div
-            id="mobile-menu-panel"
-            className="fixed inset-x-0 z-[60] md:hidden overflow-y-auto overscroll-contain bg-background border-t border-border shadow-lg"
-            style={{
-              top: headerHeight,
-              maxHeight: `calc(100dvh - ${headerHeight}px)`,
-              paddingBottom: "calc(5.5rem + env(safe-area-inset-bottom))",
-            }}
+            className="flex-1 overflow-y-auto overscroll-contain"
+            style={{ paddingBottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
           >
             <div className="container mx-auto px-4 pb-4">
               <div className="flex flex-col gap-2 pt-3">
@@ -444,7 +437,7 @@ const MegaMenu = () => {
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Desktop Dienstleistungen – schiebt Seite nach unten, kein Overlay */}
