@@ -70,20 +70,12 @@ const Contact = () => {
       return;
     }
 
-    if (result.method === "web3forms") {
-      toast({
-        title: "Nachricht gesendet!",
-        description: "Wir haben Ihre Anfrage erhalten und melden uns schnellstmöglich.",
-      });
-      setFormData({ name: "", email: "", subject: "", message: "" });
-      setPrivacyAccepted(false);
-      return;
-    }
-
     toast({
-      title: "E-Mail-Programm wird geöffnet",
-      description: "Bitte senden Sie die Nachricht in Ihrem E-Mail-Programm ab.",
+      title: "Nachricht gesendet!",
+      description: "Wir haben Ihre Anfrage erhalten und melden uns schnellstmöglich.",
     });
+    setFormData({ name: "", email: "", subject: "", message: "" });
+    setPrivacyAccepted(false);
   };
 
   const contactInfo = [
